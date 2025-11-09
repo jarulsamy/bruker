@@ -2,6 +2,7 @@
 
 use anyhow::Result;
 use chrono::Local;
+use clap::Parser;
 use core::f64;
 use csv::ReaderBuilder;
 use rust_xlsxwriter::{
@@ -9,8 +10,11 @@ use rust_xlsxwriter::{
     workbook::Workbook,
     Chart,
 };
-use std::{fs::File, io::BufReader, path::{Path, PathBuf}};
-use clap::Parser;
+use std::{
+    fs::File,
+    io::BufReader,
+    path::{Path, PathBuf},
+};
 
 #[derive(Debug)]
 struct PlotData {
@@ -207,8 +211,7 @@ fn main() -> Result<()> {
         .unwrap_or(&in_file.to_string_lossy())
         .to_string();
 
-    if args.output.is_none() {
-    };
+    if args.output.is_none() {};
 
     let unique_out_filepath = match args.output {
         None => {
@@ -229,6 +232,8 @@ fn main() -> Result<()> {
 
     let data = csv_read(&args.infile)?;
     data.to_excel(&unique_out_filepath, title.as_deref())?;
+
+    opener::open(unique_out_filepath)?;
 
     Ok(())
 }
