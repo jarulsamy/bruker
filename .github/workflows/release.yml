@@ -1,8 +1,9 @@
 name: Build Windows Release
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - "v*.*.*"
 
 jobs:
   build-windows:
@@ -20,11 +21,9 @@ jobs:
           override: true
 
       - name: Build release
-        run: cargo build --release --manifest-path powder-plot\Cargo.toml
+        run: cargo build --release --manifest-path powder-plot/Cargo.toml
 
-      - name: Upload release asset
+      - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: powder-plot\target\release\plot.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          files: powder-plot/target/release/plot.exe
