@@ -1,0 +1,1070 @@
+%|IGNORE_WHITESPACE=1|
+%<$Header: /usr/lib/cvsroot/seattle/report/acta.cif,v 1.70 2021/08/25 20:10:25 kaercher Exp $>comment
+%|MAX_LENGTH=80|
+
+%|IGNORE_WHITESPACE=0|data_global
+_audit_creation_method                  %(_audit.creation_method="
+;
+;")s
+
+_publ_requested_journal                 %(_publ.requested_journal=?)s
+
+_publ_contact_author_name               %(_publ.contact_author_name=?)s
+_publ_contact_author_address            %(_publ.contact_author_address="
+;
+;")s
+_publ_contact_author_email              %(_publ.contact_author_email=?)s
+_publ_contact_author_fax                %(_publ.contact_author_fax=?)s
+_publ_contact_author_phone              %(_publ.contact_author_phone=?)s
+%|IGNORE_WHITESPACE=1|
+%<"_authors", 1, _publ_author.name,
+                 _publ_author.address>section
+    %<_publ_author_name, [value is None and "?" or value for value in _publ_author.name ]>variable
+    %<_publ_author_address, [value is None and "\n" or value for value in _publ_author.address ]>variable
+%[%(_publ_author_name)s,
+  %(_publ_author_address)s]loop
+%<"GENERAL">section
+%|IGNORE_WHITESPACE=0|
+_publ_section_title                     %(_publ.section_title="
+;
+;")s
+_publ_section_abstract                  %(_publ.section_abstract="
+;
+;")s
+_publ_section_references                %(_publ.section_references="
+;
+;")s
+_publ_section_comment                   %(_publ.section_comment="
+;
+;")s
+%|IGNORE_WHITESPACE=1|
+%<"GENERAL">section
+%|IGNORE_WHITESPACE=0|
+data_%(_entry.id=I)s
+_chemical_name_systematic               %(_chemical.name_systematic=?)s
+_chemical_name_common                   %(_chemical.name_common=?)s
+_chemical_formula_moiety                %(_chemical_formula.sum=?)s
+_chemical_formula_sum                   %(_chemical_formula.sum=?)s
+_chemical_formula_iupac                 %(_chemical_formula.iupac=?)s
+_chemical_formula_weight                %(_chemical_formula.weight=?).2f
+%|IGNORE_WHITESPACE=1|
+%<__show_chemical_absolute_configuration, 1>variable
+%<"_chemical_absolute_configuration", 1, _space_group.name_Hall>section
+    %<__show_chemical_absolute_configuration, not ( _space_group.name_Hall .startswith("-") or ( "-1" in _space_group.name_Hall ))>variable
+%<"_", 1, __show_chemical_absolute_configuration>section
+    %|IGNORE_WHITESPACE=0|_chemical_absolute_configuration        %(_chemical.absolute_configuration=?)s
+%|IGNORE_WHITESPACE=1|
+%<"GENERAL">section
+%|IGNORE_WHITESPACE=0|
+_chemical_melting_point                 %(_chemical.melting_point=?).1f
+
+_space_group_crystal_system             %(_space_group.crystal_system=?)s$ll
+_space_group_IT_number                  %(_space_group.IT_number=?)d
+_space_group_name_H-M_alt               %(_space_group.name_H-M_alt=?)s
+%|IGNORE_WHITESPACE=1|
+%<_space_group.name_Hall, _space_group.name_Hall .strip()>variable
+%|IGNORE_WHITESPACE=0|_space_group_name_Hall                  %(_space_group.name_Hall=?)s
+%|IGNORE_WHITESPACE=1|
+%<"_space_group_symop_operation_xyz", 1, _space_group_symop.operation_xyz>section
+    %<_space_group_symop_operation_xyz, _space_group_symop.operation_xyz>variable
+%[%(_space_group_symop_operation_xyz)s]loop
+%|IGNORE_WHITESPACE=0|
+%|IGNORE_WHITESPACE=1|
+%<"GENERAL">section
+%|IGNORE_WHITESPACE=1|
+
+%<"_cell", 1, _cell.length_a,
+              _cell.length_b,
+              _cell.length_c,
+              _cell.angle_alpha,
+              _cell.angle_beta,
+              _cell.angle_gamma>section
+
+    %<__has_cell, 1>variable
+
+    %<__cell_volume, _cell.length_a * _cell.length_b * _cell.length_c * sqrt( 1.0 +
+                     2.0 * cos( _cell.angle_alpha ) * cos( _cell.angle_beta ) * cos( _cell.angle_gamma ) - (
+                     cos( _cell.angle_alpha ) ** 2 + cos( _cell.angle_beta ) ** 2 + cos( _cell.angle_gamma ) ** 2 ) ) >variable
+
+    %<__length_a, "%.4f" % _cell.length_a >variable
+    %<__length_b, "%.4f" % _cell.length_b >variable
+    %<__length_c, "%.4f" % _cell.length_c >variable
+    %<__angle_alpha, "%.0f" % _cell.angle_alpha >variable
+    %<__angle_beta, "%.0f" % _cell.angle_beta >variable
+    %<__angle_gamma, "%.0f" % _cell.angle_gamma >variable
+    %<__volume, "%.1f" % __cell_volume >variable
+
+    %<"_", 1, __has_cell,
+              _cell.length_a_esd>section
+        %<__length_a, nicestrpar( _cell.length_a , _cell.length_a_esd )>variable
+        %<__decimals, max(0, " __length_a ".strip().find("."))>variable
+        %<__decimals, __decimals and (len(" __length_a ".strip()) - __decimals - 1) or 0>variable
+        %<__length_b, "%.*f" % ( __decimals , _cell.length_b ) >variable
+        %<__length_c, "%.*f" % ( __decimals , _cell.length_c ) >variable
+
+	%<"_", 1, __has_cell,
+			  _cell.length_b_esd>section
+		%<__length_b, nicestrpar( _cell.length_b , _cell.length_b_esd )>variable
+
+	%<"_", 1, __has_cell,
+			  _cell.length_c_esd>section
+		%<__length_c, nicestrpar( _cell.length_c , _cell.length_c_esd )>variable
+
+	%<"_", 1, __has_cell,
+			  _cell.angle_alpha_esd>section
+		%<__angle_alpha, nicestrpar( _cell.angle_alpha , _cell.angle_alpha_esd )>variable
+
+	%<"_", 1, __has_cell,
+			  _cell.angle_beta_esd>section
+		%<__angle_beta, nicestrpar( _cell.angle_beta , _cell.angle_beta_esd )>variable
+
+	%<"_", 1, __has_cell,
+			  _cell.angle_gamma_esd>section
+		%<__angle_gamma, nicestrpar( _cell.angle_gamma , _cell.angle_gamma_esd )>variable
+
+	%<"_", 1, __has_cell,
+              _cell.volume_esd>section
+		%<__volume, nicestrpar( __cell_volume , _cell.volume_esd )>variable
+
+%<"GENERAL">section
+%|IGNORE_WHITESPACE=0|_cell_length_a                          %(__length_a=?)s
+_cell_length_b                          %(__length_b=?)s
+_cell_length_c                          %(__length_c=?)s
+_cell_angle_alpha                       %(__angle_alpha=?)s
+_cell_angle_beta                        %(__angle_beta=?)s
+_cell_angle_gamma                       %(__angle_gamma=?)s
+_cell_volume                            %(__volume=?)s
+_cell_formula_units_Z                   %(_cell.formula_units_Z=?)i
+_cell_measurement_reflns_used           %(_cell_measurement.reflns_used=?)i
+_cell_measurement_theta_min             %(_cell_measurement.theta_min=?).4f
+_cell_measurement_theta_max             %(_cell_measurement.theta_max=?).4f
+%|IGNORE_WHITESPACE=1|
+%<"_cell_measurement_temperature", 1, _diffrn.ambient_temp>section
+    %<__diffrn_ambient_temp, "%.0f" % _diffrn.ambient_temp>variable
+%<"_", 1, _diffrn.ambient_temp, _diffrn.ambient_temp_esd>section
+    %<__diffrn_ambient_temp, nicestrpar( _diffrn.ambient_temp , _diffrn.ambient_temp_esd )>variable
+%<"GENERAL">section
+%|IGNORE_WHITESPACE=0|_cell_measurement_temperature           %(__diffrn_ambient_temp=?)s
+%|IGNORE_WHITESPACE=1|
+
+%<"_cell_wave_vector", 1, _cell.modulation_dimension,
+                          _cell_wave_vector.seq_id,
+                          _cell_wave_vector.x,
+                          _cell_wave_vector.y,
+                          _cell_wave_vector.z>section
+
+    %<__has_wave_vector, 1>variable
+
+    %<_cell_wave_vector_seq_id, _cell_wave_vector.seq_id>variable 
+    %<_cell_wave_vector_x, [ "%.4f" % x for x in _cell_wave_vector.x ]>variable
+    %<_cell_wave_vector_y, [ "%.4f" % y for y in _cell_wave_vector.y ]>variable
+    %<_cell_wave_vector_z, [ "%.4f" % z for z in _cell_wave_vector.z ]>variable
+
+    %<"_", 1, __has_wave_vector, _cell_wave_vector.x_esd>section
+        %<_cell_wave_vector_x, [ nicestrpar(x, esd) for x, esd in zip( _cell_wave_vector.x , _cell_wave_vector.x_esd )]>variable
+    %<"_", 1, __has_wave_vector, _cell_wave_vector.y_esd>section
+        %<_cell_wave_vector_y, [ nicestrpar(y, esd) for y, esd in zip( _cell_wave_vector.y , _cell_wave_vector.y_esd )]>variable
+    %<"_", 1, __has_wave_vector, _cell_wave_vector.z_esd>section
+        %<_cell_wave_vector_z, [ nicestrpar(z, esd) for z, esd in zip( _cell_wave_vector.z , _cell_wave_vector.z_esd )]>variable
+    %<"_", 1, __has_wave_vector>section
+%|IGNORE_WHITESPACE=0|
+_cell_modulation_dimension              %(_cell.modulation_dimension=?)i
+%[%(_cell_wave_vector_seq_id)i,
+  %(_cell_wave_vector_x)s,
+  %(_cell_wave_vector_y)s,
+  %(_cell_wave_vector_z)s]loop%|IGNORE_WHITESPACE=1|
+
+%<"GENERAL">section
+%|IGNORE_WHITESPACE=0|
+_exptl_crystal_description              %(_exptl_crystal.description=?)s
+_exptl_crystal_colour                   %(_exptl_crystal.colour=?)s
+_exptl_crystal_size_max                 %(_exptl_crystal.size_max=?).3f
+_exptl_crystal_size_mid                 %(_exptl_crystal.size_mid=?).3f
+_exptl_crystal_size_min                 %(_exptl_crystal.size_min=?).3f
+_exptl_crystal_density_diffrn           %(_exptl_crystal.density_diffrn=?).3f
+%|IGNORE_WHITESPACE=1|
+%<"_exptl_crystal_density_meas", 1, _exptl_crystal.density_meas>section
+    %<__exptl_crystal_density_meas, "%.3f" % _exptl_crystal.density_meas>variable
+%<"_", 1, _exptl_crystal.density_meas, _exptl_crystal.density_meas_esd>section
+    %<__exptl_crystal_density_meas, nicestrpar( _exptl_crystal.density_meas , _exptl_crystal.density_meas_esd )>variable
+%<"GENERAL">section
+%|IGNORE_WHITESPACE=0|_exptl_crystal_density_meas             %(__exptl_crystal_density_meas=?)s
+_exptl_crystal_density_method           %(_exptl_crystal.density_method='not measured')s
+_exptl_crystal_F_000                    %(_exptl_crystal.F_000=?)i
+
+_exptl_absorpt_coefficient_mu           %(_exptl.absorpt_coefficient_mu=?).3f
+_exptl_absorpt_correction_type          %(_exptl.absorpt_correction_type=?)s
+%|IGNORE_WHITESPACE=1|
+%<__has_no_absorpt_correction, True>variable
+%<__has_no_absorpt_correction, _exptl.absorpt_correction_type == "none">variable
+%<"_exptl_absorpt_correction", 1, __has_no_absorpt_correction>section
+    %<_computing.bruker_data_scaling, None>variable
+    %<_exptl.absorpt_process_details, None>variable
+    %<_exptl.absorpt_correction_T_max, None>variable
+    %<_exptl.absorpt_correction_T_min, None>variable
+%<"_exptl_absorpt_process_details", 1, _computing.bruker_data_scaling>section
+    %<_exptl_absorpt_process_details, _computing.bruker_data_scaling>variable
+%<"_exptl_absorpt_process_details", 1, _exptl.absorpt_process_details>section
+    %<_exptl_absorpt_process_details, _exptl.absorpt_process_details>variable
+%<"GENERAL">section
+%|IGNORE_WHITESPACE=0|_exptl_absorpt_process_details          %(_exptl_absorpt_process_details="
+;
+;")s
+%|IGNORE_WHITESPACE=1|
+%<"_exptl_absorpt_correction_T_min", 1, _exptl.absorpt_correction_T_max,
+                                        _exptl.bruker_absorpt_correction_T_ratio>section
+    %<_exptl.absorpt_correction_T_min, _exptl.absorpt_correction_T_max * _exptl.bruker_absorpt_correction_T_ratio >variable
+%<"GENERAL">section
+%|IGNORE_WHITESPACE=0|_exptl_absorpt_correction_T_min         %(_exptl.absorpt_correction_T_min=?).2f
+_exptl_absorpt_correction_T_max         %(_exptl.absorpt_correction_T_max=?).2f
+
+_exptl_special_details                  %(_exptl.details="
+;
+;")s 
+
+_diffrn_ambient_temperature             %(__diffrn_ambient_temp=?)s
+
+_diffrn_source                          %(_diffrn_source.source=?)s
+_diffrn_source_type                     %(_diffrn_source.type=?)s
+%|IGNORE_WHITESPACE=1|
+%<"_diffrn_source_current", 1, _bruker_diffrn_runs.current>section
+    %<_diffrn_source_current, _bruker_diffrn_runs.current [0] if len(set( _bruker_diffrn_runs.current )) == 1 else None>variable
+%<"_diffrn_source_voltage", 1, _bruker_diffrn_runs.voltage>section
+    %<_diffrn_source_voltage, _bruker_diffrn_runs.voltage [0] if len(set( _bruker_diffrn_runs.voltage )) == 1 else None>variable
+%<"_diffrn_source_power", 1, _diffrn_source_current, _diffrn_source_voltage>section
+    %<_diffrn_source_power, _diffrn_source_current * _diffrn_source_voltage / 1000.0>variable
+%<"GENERAL">section
+%|IGNORE_WHITESPACE=0|_diffrn_source_power                    %(_diffrn_source_power=?).2f
+_diffrn_source_current                  %(_diffrn_source_current=?).1f
+_diffrn_source_voltage                  %(_diffrn_source_voltage=?).0f
+
+_diffrn_radiation_probe                 %(_diffrn_radiation.probe=?)s
+_diffrn_radiation_type                  %(_diffrn_radiation.type=MoK\a)s
+_diffrn_radiation_wavelength            %(_cell_measurement.wavelength=?).5f
+_diffrn_radiation_monochromator         %(_diffrn_radiation.monochromator=?)s
+
+_diffrn_measurement_device              %(_diffrn_measurement.device="'Bruker D8 Venture'")s
+_diffrn_measurement_device_type         %(_diffrn_measurement.device_type=?)s
+_diffrn_measurement_method              %(_diffrn_measurement.method=?)s
+
+_diffrn_detector_area_resol_mean        %(_diffrn_detector.area_resol_mean=?).4f
+
+_diffrn_reflns_number                   %(_diffrn_reflns.number=?)i
+_diffrn_reflns_av_R_equivalents         %(_diffrn_reflns.av_R_equivalents=?).4f
+_diffrn_reflns_av_unetI/netI            %(_diffrn_reflns.av_sigmaI_over_netI=?).4f
+_diffrn_reflns_theta_min                %(_diffrn_reflns.theta_min=?).2f
+_diffrn_reflns_theta_max                %(_diffrn_reflns.theta_max=?).2f
+_diffrn_reflns_theta_full               %(_diffrn_reflns.bruker_theta_full=?).2f
+_diffrn_measured_fraction_theta_max     %(_refine.ls_percent_reflns_obs=?).3f^-2
+_diffrn_measured_fraction_theta_full    %(_refine.ls_percent_reflns_obs=?).3f^-2
+_diffrn_reflns_limit_h_min              %(_diffrn_reflns.limit_h_min=?)i
+_diffrn_reflns_limit_h_max              %(_diffrn_reflns.limit_h_max=?)i
+_diffrn_reflns_limit_k_min              %(_diffrn_reflns.limit_k_min=?)i
+_diffrn_reflns_limit_k_max              %(_diffrn_reflns.limit_k_max=?)i
+_diffrn_reflns_limit_l_min              %(_diffrn_reflns.limit_l_min=?)i
+_diffrn_reflns_limit_l_max              %(_diffrn_reflns.limit_l_max=?)i
+
+_refine_special_details                 %(_refine.details="
+;
+;")s
+
+_reflns_number_total                    %(_reflns.number_all=?)i
+_reflns_number_gt                       %(_reflns.number_gt=?)i
+_reflns_threshold_expression            %(_reflns.threshold_expression=I>2\s(I))s
+_reflns_Friedel_coverage                %(_reflns.Friedel_coverage=?).3f
+%|IGNORE_WHITESPACE=1|
+%<"_reflns_Friedel_fractions", 1, _space_group.name_Hall>section
+	%<__reflns_Friedel_fraction_max, "." if _space_group.name_Hall .startswith("-") else "?">variable
+	%<__reflns_Friedel_fraction_full, "." if _space_group.name_Hall .startswith("-") else "?">variable
+%<"_reflns_Friedel_fractions", 1, _reflns.bruker_Friedel_fraction_max, __reflns_Friedel_fraction_max>section
+	%<__reflns_Friedel_fraction_max, "." if __reflns_Friedel_fraction_max == "." else "%.3f" % _reflns.bruker_Friedel_fraction_max >variable
+%<"_reflns_Friedel_fractions", 1, _reflns.bruker_Friedel_fraction_full, __reflns_Friedel_fraction_full>section
+	%<__reflns_Friedel_fraction_full, "." if __reflns_Friedel_fraction_full == "." else "%.3f" % _reflns.bruker_Friedel_fraction_full >variable
+%<"GENERAL">section
+%|IGNORE_WHITESPACE=0|_reflns_Friedel_fraction_max            %(__reflns_Friedel_fraction_max=?)s
+_reflns_Friedel_fraction_full           %(__reflns_Friedel_fraction_full=?)s
+
+_refine_ls_structure_factor_coef        %(_refine.ls_structure_factor_coef=?)s
+_refine_ls_matrix_type                  %(_refine.ls_matrix_type=?)s
+_refine_ls_R_factor_all                 %(_refine.ls_R_factor_all=?).4f
+_refine_ls_R_factor_gt                  %(_refine.ls_R_factor_obs=?).4f
+_refine_ls_wR_factor_gt                 %(_refine.ls_wR_factor_obs=?).4f
+_refine_ls_wR_factor_ref                %(_refine.ls_wR_factor_all=?).4f
+_refine_ls_goodness_of_fit_ref          %(_refine.ls_goodness_of_fit_ref=?).3f
+_refine_ls_restrained_S_all             %(_refine.ls_restrained_S_all=?).3f
+_refine_ls_number_reflns                %(_refine.ls_number_reflns_obs=?)i
+_refine_ls_number_parameters            %(_refine.ls_number_parameters=?)i
+_refine_ls_number_restraints            %(_refine.ls_number_restraints=?)i
+_refine_ls_number_constraints           %(_refine.ls_number_constraints=?)i
+_refine_ls_hydrogen_treatment           %(_refine.ls_hydrogen_treatment=?)s
+_refine_ls_weighting_scheme             %(_refine.ls_weighting_scheme=?)s
+_refine_ls_weighting_details            %(_refine.ls_weighting_details=?)s
+
+_atom_sites_solution_hydrogens          %(_atom_sites.solution_hydrogens=?)s
+_atom_sites_solution_primary            %(_atom_sites.solution_primary=?)s
+_atom_sites_solution_secondary          %(_atom_sites.solution_secondary=?)s
+
+_refine_ls_shift/su_max                 %(_refine.ls_shift_over_esd_max=?).3f
+_refine_ls_shift/su_mean                %(_refine.ls_shift_over_esd_mean=?).3f
+_refine_diff_density_max                %(_refine.diff_density_max=?).3f
+_refine_diff_density_min                %(_refine.diff_density_min=?).3f
+_refine_ls_extinction_method            %(_refine.ls_extinction_method=?)s
+%|IGNORE_WHITESPACE=1|
+%<"_refine_ls_extinction_coef", 1, _refine.ls_extinction_coef>section
+    %<__refine_ls_extinction_coef, "%.3f" % _refine.ls_extinction_coef>variable
+%<"_", 1, _refine.ls_extinction_coef, _refine.ls_extinction_coef_esd>section
+    %<__refine_ls_extinction_coef, nicestrpar( _refine.ls_extinction_coef , _refine.ls_extinction_coef_esd )>variable
+%<"GENERAL">section
+%|IGNORE_WHITESPACE=0|_refine_ls_extinction_coef              %(__refine_ls_extinction_coef=?)s
+%|IGNORE_WHITESPACE=1|
+%<__show_abs_structure_Flack, 1>variable
+%<__has_ls_abs_structure_Flack, _refine.ls_abs_structure_Flack is not None>variable
+%<"_abs_structure_Flack", 1, _space_group.name_Hall>section
+    %<__show_abs_structure_Flack, not ( _space_group.name_Hall .startswith("-") or ( "-1" in _space_group.name_Hall ))>variable
+%<"_", 1, _refine.ls_abs_structure_details>section %<This section triggers the use of _refine.ls_abs_structure_details, which might be missing.>comment
+%<"_", 1, __show_abs_structure_Flack>section
+    %<_refine_ls_abs_structure_details, _refine.ls_abs_structure_details>variable
+    %|IGNORE_WHITESPACE=0|_refine_ls_abs_structure_details        %(_refine_ls_abs_structure_details="
+;
+;")s
+%|IGNORE_WHITESPACE=1|
+%<"_", 1, __show_abs_structure_Flack, __has_ls_abs_structure_Flack>section
+    %<_refine_ls_abs_structure_Flack, "%3f" % _refine.ls_abs_structure_Flack>variable
+%<"_", 1, __show_abs_structure_Flack, __has_ls_abs_structure_Flack, _refine.ls_abs_structure_Flack_esd>section
+    %<_refine_ls_abs_structure_Flack, nicestrpar( _refine.ls_abs_structure_Flack , _refine.ls_abs_structure_Flack_esd )>variable
+%<"_", 1, __show_abs_structure_Flack>section
+    %|IGNORE_WHITESPACE=0|_refine_ls_abs_structure_Flack          %(_refine_ls_abs_structure_Flack=.)s
+%<"GENERAL">section%|IGNORE_WHITESPACE=1|
+
+%<"_scatting_factors", 1, _atom_type.symbol,
+                          _atom_type.description,
+                          _atom_type.scat_dispersion_real,
+                          _atom_type.scat_dispersion_imag,
+                          _atom_type.scat_dispersion_source>section
+	%<_atom_type_symbol, _atom_type.symbol>variable
+    %<_atom_type_description, _atom_type.description>variable
+    %<_atom_type_scat_dispersion_real, _atom_type.scat_dispersion_real>variable
+    %<_atom_type_scat_dispersion_imag, _atom_type.scat_dispersion_imag>variable
+    %<_atom_type_scat_source, _atom_type.scat_dispersion_source>variable
+%|IGNORE_WHITESPACE=0|
+%[%(_atom_type_symbol)s,
+  %(_atom_type_description)s,
+  %(_atom_type_scat_dispersion_real).4f,
+  %(_atom_type_scat_dispersion_imag).4f,
+  %(_atom_type_scat_source)s]loop
+%|IGNORE_WHITESPACE=1|
+%<"GENERAL">section
+%|IGNORE_WHITESPACE=0|_computing_data_collection              %(_computing.data_collection=?)s
+_computing_cell_refinement              %(_computing.cell_refinement=?)s
+_computing_data_reduction               %(_computing.data_reduction=?)s
+_computing_structure_solution           %(_computing.structure_solution=?)s
+_computing_structure_refinement         %(_computing.structure_refinement=?)s
+_computing_molecular_graphics           %(_computing.molecular_graphics=?)s
+_computing_publication_material         %(_computing.publication_material=?)s
+%|IGNORE_WHITESPACE=1|
+
+%<"_atom_sites", 1, _atom_site.refinement_flags>section
+    %<_atom_site.refinement_flags_adp, [ f and "".join([x for x in f if x in "UT"]) or None for f in _atom_site.refinement_flags ]>variable
+    %<_atom_site.refinement_flags_occupancy, [ f and "".join([x for x in f if x in "P"]) or None for f in _atom_site.refinement_flags ]>variable
+    %<_atom_site.refinement_flags_posn, [ f and "".join([x for x in f if x in "DGRS"]) or None for f in _atom_site.refinement_flags ]>variable
+
+%<"_atom_sites", 1, _atom_site.type_symbol,
+                    _atom_site.label_atom_id,
+                    _atom_site.fract_x,
+                    _atom_site.fract_y,
+                    _atom_site.fract_z,
+                    _atom_site.U_iso_or_equiv,
+                    _atom_site.U_iso_or_equiv_esd,
+                    _atom_site.adp_type,
+                    _atom_site.calc_flag,
+                    _atom_site.refinement_flags_adp,
+                    _atom_site.refinement_flags_occupancy,
+                    _atom_site.refinement_flags_posn,
+                    _atom_site.occupancy,
+                    _atom_site.disorder_assembly,
+                    _atom_site.disorder_group>section
+    %<__has_atom_sites, 1>variable
+    %<_atom_site_type_symbol, _atom_site.type_symbol>variable
+    %<_atom_site_label, _atom_site.label_atom_id>variable
+    %<__atom_site_fract_x_esd, [0 for value in _atom_site.fract_x ]>variable
+    %<__atom_site_fract_y_esd, [0 for value in _atom_site.fract_y ]>variable
+    %<__atom_site_fract_z_esd, [0 for value in _atom_site.fract_z ]>variable
+%<"_", 1, __has_atom_sites, _atom_site.fract_x_esd>section
+    %<__atom_site_fract_x_esd, _atom_site.fract_x_esd>variable
+%<"_", 1, __has_atom_sites, _atom_site.fract_y_esd>section
+    %<__atom_site_fract_y_esd, _atom_site.fract_y_esd>variable
+%<"_", 1, __has_atom_sites, _atom_site.fract_z_esd>section
+    %<__atom_site_fract_z_esd, _atom_site.fract_z_esd>variable
+%<"_", 1, __has_atom_sites>section
+    %<_atom_site_fract_x, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _atom_site.fract_x , __atom_site_fract_x_esd )]>variable
+    %<_atom_site_fract_y, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _atom_site.fract_y , __atom_site_fract_y_esd )]>variable
+    %<_atom_site_fract_z, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _atom_site.fract_z , __atom_site_fract_z_esd )]>variable
+    %<_atom_site_U_iso_or_equiv, [nicestrpar((value or 0) , (esd or 0)) for value, esd in zip( _atom_site.U_iso_or_equiv , _atom_site.U_iso_or_equiv_esd )]>variable
+    %<_atom_site_adp_type, _atom_site.adp_type>variable
+    %<_atom_site_calc_flag, [ value is None and "." or value for value in _atom_site.calc_flag ]>variable
+    %<_atom_site_refinement_flags_adp, [ value is None and "." or value for value in _atom_site.refinement_flags_adp ]>variable
+    %<_atom_site_refinement_flags_occupancy, [ value is None and "." or value for value in _atom_site.refinement_flags_occupancy ]>variable
+    %<_atom_site_refinement_flags_posn, [ value is None and "." or value for value in _atom_site.refinement_flags_posn ]>variable
+    %<_atom_site_occupancy, [ "%g" % value for value in _atom_site.occupancy ]>variable
+%<"_", 1, __has_atom_sites, _atom_site.occupancy_esd>section
+    %<_atom_site_occupancy, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _atom_site.occupancy , _atom_site.occupancy_esd )]>variable
+%<"_", 1, __has_atom_sites>section
+    %<_atom_site_disorder_assembly, [ value is None and "." or value for value in _atom_site.disorder_assembly ]>variable
+    %<_atom_site_disorder_group, [ value is None and "." or value for value in _atom_site.disorder_group ]>variable
+%|IGNORE_WHITESPACE=0|
+%|IGNORE_WHITESPACE=1|
+    %[%(_atom_site_type_symbol)s,
+      %(_atom_site_label)s,
+      %(_atom_site_fract_x)s,
+      %(_atom_site_fract_y)s,
+      %(_atom_site_fract_z)s,
+      %(_atom_site_U_iso_or_equiv)s,
+      %(_atom_site_adp_type)s,
+      %(_atom_site_calc_flag)s,
+      %(_atom_site_refinement_flags_adp)s,
+      %(_atom_site_refinement_flags_occupancy)s,
+      %(_atom_site_refinement_flags_posn)s,
+      %(_atom_site_occupancy)s,
+      %(_atom_site_disorder_assembly)s,
+      %(_atom_site_disorder_group)s]loop
+
+%<"_atom_adps", 1, _atom_site.label_atom_id,
+                   _atom_site.aniso_U[1][1],
+                   _atom_site.aniso_U[2][2],
+                   _atom_site.aniso_U[3][3],
+                   _atom_site.aniso_U[2][3],
+                   _atom_site.aniso_U[1][3],
+                   _atom_site.aniso_U[1][2]>section
+    %<__has_atom_adps, 1>variable
+    %<_atom_site_aniso_label, _atom_site.label_atom_id>variable
+    %<__atom_site_aniso_U_11_esd, [0 for value in _atom_site.aniso_U[1][1] ]>variable
+    %<__atom_site_aniso_U_22_esd, [0 for value in _atom_site.aniso_U[2][2] ]>variable
+    %<__atom_site_aniso_U_33_esd, [0 for value in _atom_site.aniso_U[3][3] ]>variable
+    %<__atom_site_aniso_U_12_esd, [0 for value in _atom_site.aniso_U[1][2] ]>variable
+    %<__atom_site_aniso_U_13_esd, [0 for value in _atom_site.aniso_U[1][3] ]>variable
+    %<__atom_site_aniso_U_23_esd, [0 for value in _atom_site.aniso_U[2][3] ]>variable
+%<"_", 1, __has_atom_adps, _atom_site.aniso_U[1][1]_esd>section
+    %<__atom_site_aniso_U_11_esd, _atom_site.aniso_U[1][1]_esd>variable
+%<"_", 1, __has_atom_adps, _atom_site.aniso_U[2][2]_esd>section
+    %<__atom_site_aniso_U_22_esd, _atom_site.aniso_U[2][2]_esd>variable
+%<"_", 1, __has_atom_adps, _atom_site.aniso_U[3][3]_esd>section
+    %<__atom_site_aniso_U_33_esd, _atom_site.aniso_U[3][3]_esd>variable
+%<"_", 1, __has_atom_adps, _atom_site.aniso_U[1][2]_esd>section
+    %<__atom_site_aniso_U_12_esd, _atom_site.aniso_U[1][2]_esd>variable
+%<"_", 1, __has_atom_adps, _atom_site.aniso_U[1][3]_esd>section
+    %<__atom_site_aniso_U_13_esd, _atom_site.aniso_U[1][3]_esd>variable
+%<"_", 1, __has_atom_adps, _atom_site.aniso_U[2][3]_esd>section
+    %<__atom_site_aniso_U_23_esd, _atom_site.aniso_U[2][3]_esd>variable
+%<"_", 1, __has_atom_adps>section
+    %<_atom_site_aniso_U_11, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _atom_site.aniso_U[1][1] , __atom_site_aniso_U_11_esd )]>variable
+    %<_atom_site_aniso_U_22, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _atom_site.aniso_U[2][2] , __atom_site_aniso_U_22_esd )]>variable
+    %<_atom_site_aniso_U_33, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _atom_site.aniso_U[3][3] , __atom_site_aniso_U_33_esd )]>variable
+    %<_atom_site_aniso_U_12, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _atom_site.aniso_U[1][2] , __atom_site_aniso_U_12_esd )]>variable
+    %<_atom_site_aniso_U_13, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _atom_site.aniso_U[1][3] , __atom_site_aniso_U_13_esd )]>variable
+    %<_atom_site_aniso_U_23, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _atom_site.aniso_U[2][3] , __atom_site_aniso_U_23_esd )]>variable
+%|IGNORE_WHITESPACE=0|
+%|IGNORE_WHITESPACE=1|
+    %[%(_atom_site_aniso_label)s,
+      %(_atom_site_aniso_U_11)s,
+      %(_atom_site_aniso_U_22)s,
+      %(_atom_site_aniso_U_33)s,
+      %(_atom_site_aniso_U_12)s,
+      %(_atom_site_aniso_U_13)s,
+      %(_atom_site_aniso_U_23)s]loop_< ( _atom_site.label_atom_id [0] not in "Hh" or (
+                                         _atom_site.label_atom_id + "#" )[1] in "efgso" ) and
+                                         _atom_site.aniso_U[1][1] is not None and
+                                         _atom_site.aniso_U[2][2] is not None and
+                                         _atom_site.aniso_U[3][3] is not None and
+                                         _atom_site.aniso_U[2][3] is not None and
+                                         _atom_site.aniso_U[1][3] is not None and
+                                         _atom_site.aniso_U[1][2] is not None >query
+
+%<"GENERAL">section
+%|IGNORE_WHITESPACE=0|
+_geom_special_details                   %(_geom.details="
+;
+;")s
+%|IGNORE_WHITESPACE=1|
+
+%<"_bond_lengths", 1, _geom_bond.atom_site_id_1,
+                      _geom_bond.atom_site_id_2,
+                      _geom_bond.site_symmetry_2,
+                      _geom_bond.dist>section
+    %<__has_bonds, 1>variable
+    %<_geom_bond_atom_site_label_1, _geom_bond.atom_site_id_1>variable
+    %<_geom_bond_atom_site_label_2, _geom_bond.atom_site_id_2>variable
+    %<_geom_bond_site_symmetry_2, [value is None and "." or value for value in _geom_bond.site_symmetry_2 ]>variable
+    %<__geom_bond_dist_esd, [0 for value in _geom_bond.dist ]>variable
+%<"_", 1, __has_bonds, _geom_bond.dist_esd>section
+    %<__geom_bond_dist_esd, _geom_bond.dist_esd>variable
+%<"_", 1, __has_bonds>section
+    %<_geom_bond_distance, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _geom_bond.dist , __geom_bond_dist_esd )]>variable
+    %<_geom_bond_publ_flag, ["?" for value in _geom_bond.atom_site_id_1 ]>variable
+%<"_", 1, __has_bonds, _geom_bond.publ_flag>section
+    %<_geom_bond_publ_flag, [value is None and "?" or value for value in _geom_bond.publ_flag ]>variable
+%<"_", 1, __has_bonds>section
+%|IGNORE_WHITESPACE=0|
+%|IGNORE_WHITESPACE=1|
+    %[%(_geom_bond_atom_site_label_1)s,
+      %(_geom_bond_atom_site_label_2)s,
+      %(_geom_bond_site_symmetry_2)s,
+      %(_geom_bond_distance)s,
+      %(_geom_bond_publ_flag)s]loop
+
+%<"_bond_angles", 1, _geom_angle.atom_site_id_1,
+                     _geom_angle.atom_site_id_2,
+                     _geom_angle.atom_site_id_3,
+                     _geom_angle.site_symmetry_1,
+                     _geom_angle.site_symmetry_3,
+                     _geom_angle.value>section
+    %<__has_angles, 1>variable
+    %<_geom_angle_atom_site_label_1, _geom_angle.atom_site_id_1>variable
+    %<_geom_angle_atom_site_label_2, _geom_angle.atom_site_id_2>variable
+    %<_geom_angle_atom_site_label_3, _geom_angle.atom_site_id_3>variable
+    %<_geom_angle_site_symmetry_1, [value is None and "." or value for value in _geom_angle.site_symmetry_1 ]>variable
+    %<_geom_angle_site_symmetry_3, [value is None and "." or value for value in _geom_angle.site_symmetry_3 ]>variable
+    %<__geom_angle_value_esd, [0 for value in _geom_angle.value ]>variable
+%<"_", 1, __has_angles, _geom_angle.value_esd>section
+    %<__geom_angle_value_esd,  _geom_angle.value_esd>variable
+%<"_", 1, __has_angles>section
+    %<_geom_angle, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _geom_angle.value , __geom_angle_value_esd )]>variable
+    %<_geom_angle_publ_flag, ["?" for value in _geom_angle.atom_site_id_1 ]>variable
+%<"_", 1, __has_angles, _geom_angle.publ_flag>section
+    %<_geom_angle_publ_flag, [value is None and "?" or value for value in _geom_angle.publ_flag ]>variable
+%<"_", 1, __has_angles>section
+%|IGNORE_WHITESPACE=0|
+%|IGNORE_WHITESPACE=1|
+    %[%(_geom_angle_atom_site_label_1)s,
+      %(_geom_angle_atom_site_label_2)s,
+      %(_geom_angle_atom_site_label_3)s,
+      %(_geom_angle_site_symmetry_1)s,
+      %(_geom_angle_site_symmetry_3)s,
+      %(_geom_angle)s,
+      %(_geom_angle_publ_flag)s]loop
+
+%<"_torsion_angles", 1, _geom_torsion.atom_site_id_1,
+                        _geom_torsion.atom_site_id_2,
+                        _geom_torsion.atom_site_id_3,
+                        _geom_torsion.atom_site_id_4,
+                        _geom_torsion.site_symmetry_1,
+                        _geom_torsion.site_symmetry_2,
+                        _geom_torsion.site_symmetry_3,
+                        _geom_torsion.site_symmetry_4,
+                        _geom_torsion.value>section
+    %<__has_torsions, 1>variable
+    %<_geom_torsion_atom_site_label_1, _geom_torsion.atom_site_id_1>variable
+    %<_geom_torsion_atom_site_label_2, _geom_torsion.atom_site_id_2>variable
+    %<_geom_torsion_atom_site_label_3, _geom_torsion.atom_site_id_3>variable
+    %<_geom_torsion_atom_site_label_4, _geom_torsion.atom_site_id_4>variable
+    %<_geom_torsion_site_symmetry_1, [value is None and "." or value for value in _geom_torsion.site_symmetry_1 ]>variable
+    %<_geom_torsion_site_symmetry_2, [value is None and "." or value for value in _geom_torsion.site_symmetry_2 ]>variable
+    %<_geom_torsion_site_symmetry_3, [value is None and "." or value for value in _geom_torsion.site_symmetry_3 ]>variable
+    %<_geom_torsion_site_symmetry_4, [value is None and "." or value for value in _geom_torsion.site_symmetry_4 ]>variable
+    %<__geom_torsion_value_esd, [0 for value in _geom_torsion.value ]>variable
+%<"_", 1, __has_torsions, _geom_torsion.value_esd>section
+    %<__geom_torsion_value_esd, _geom_torsion.value_esd>variable
+%<"_", 1, __has_torsions>section
+    %<_geom_torsion, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _geom_torsion.value , __geom_torsion_value_esd )]>variable
+    %<_geom_torsion_publ_flag, ["?" for value in _geom_torsion.atom_site_id_1 ]>variable
+%<"_", 1, __has_torsions, _geom_torsion.publ_flag>section
+    %<_geom_torsion_publ_flag, [value is None and "?" or value for value in _geom_torsion.publ_flag ]>variable
+%<"_", 1, __has_torsions>section
+%|IGNORE_WHITESPACE=0|
+%|IGNORE_WHITESPACE=1|
+    %[%(_geom_torsion_atom_site_label_1)s,
+      %(_geom_torsion_atom_site_label_2)s,
+      %(_geom_torsion_atom_site_label_3)s,
+      %(_geom_torsion_atom_site_label_4)s,
+      %(_geom_torsion_site_symmetry_1)s,
+      %(_geom_torsion_site_symmetry_2)s,
+      %(_geom_torsion_site_symmetry_3)s,
+      %(_geom_torsion_site_symmetry_4)s,
+      %(_geom_torsion)s,
+      %(_geom_torsion_publ_flag)s]loop
+
+%<"_hydrogen_bonds", 1, _geom_hbond.atom_site_id_D,
+                        _geom_hbond.atom_site_id_H,
+                        _geom_hbond.atom_site_id_A,
+                        _geom_hbond.site_symmetry_A,
+                        _geom_hbond.dist_DH,
+                        _geom_hbond.dist_HA,
+                        _geom_hbond.dist_DA,
+                        _geom_hbond.angle_DHA>section
+    %<__has_hbonds, 1>variable
+    %<_geom_hbond_atom_site_label_D, _geom_hbond.atom_site_id_D>variable
+    %<_geom_hbond_atom_site_label_H, _geom_hbond.atom_site_id_H>variable
+    %<_geom_hbond_atom_site_label_A, _geom_hbond.atom_site_id_A>variable
+    %<_geom_hbond_site_symmetry_A, [value is None and "." or value for value in _geom_hbond.site_symmetry_A ]>variable
+    %<_geom_hbond_distance_DH, ["%.2f" % (value or 0) for value in _geom_hbond.dist_DH ]>variable
+    %<_geom_hbond_distance_HA, ["%.2f" % (value or 0) for value in _geom_hbond.dist_HA ]>variable
+    %<_geom_hbond_distance_DA, ["%.2f" % (value or 0) for value in _geom_hbond.dist_DA ]>variable
+    %<_geom_hbond_angle_DHA, ["%.1f" % (value or 0) for value in _geom_hbond.angle_DHA ]>variable
+    %<_geom_hbond_publ_flag, ["?" for value in _geom_hbond.atom_site_id_D ]>variable
+%<"_", 1, __has_hbonds, _geom_hbond.dist_DH_esd>section
+    %<_geom_hbond_distance_DH, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _geom_hbond.dist_DH , _geom_hbond.dist_DH_esd )]>variable
+%<"_", 1, __has_hbonds, _geom_hbond.dist_HA_esd>section
+    %<_geom_hbond_distance_HA, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _geom_hbond.dist_HA , _geom_hbond.dist_HA_esd )]>variable
+%<"_", 1, __has_hbonds, _geom_hbond.dist_DA_esd>section
+    %<_geom_hbond_distance_DA, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _geom_hbond.dist_DA , _geom_hbond.dist_DA_esd )]>variable
+%<"_", 1, __has_hbonds, _geom_hbond.angle_DHA_esd>section
+    %<_geom_hbond_angle_DHA, [nicestrpar((value or 0), (esd or 0)) for value, esd in zip( _geom_hbond.angle_DHA , _geom_hbond.angle_DHA_esd )]>variable
+%<"_", 1, __has_hbonds, _geom_hbond.publ_flag>section
+    %<_geom_hbond_publ_flag, [value is None and "?" or value for value in _geom_hbond.publ_flag ]>variable
+%<"_", 1, __has_hbonds>section
+%|IGNORE_WHITESPACE=0|
+%|IGNORE_WHITESPACE=1|
+    %[%(_geom_hbond_atom_site_label_D)s,
+      %(_geom_hbond_atom_site_label_H)s,
+      %(_geom_hbond_atom_site_label_A)s,
+      %(_geom_hbond_site_symmetry_A)s,
+      %(_geom_hbond_distance_DH)s,
+      %(_geom_hbond_distance_HA)s,
+      %(_geom_hbond_distance_DA)s,
+      %(_geom_hbond_angle_DHA)s,
+      %(_geom_hbond_publ_flag)s]loop
+
+%<"GENERAL">section
+%<_bruker_final_report, 1>variable
+%<"_", 1, _bruker_display_report>section
+%<_bruker_final_report, 0>variable
+%<"GENERAL">section
+
+%<"_shelx_res_file", 1, _shelx.res_file, _shelx.res_checksum, _bruker_final_report>section
+%|STRIP_WHITESPACE=0|
+%|IGNORE_WHITESPACE=0|
+_shelx_res_file                         %(_shelx.res_file)s
+_shelx_res_checksum                     %(_shelx.res_checksum=?)i
+%|IGNORE_WHITESPACE=1|
+%|STRIP_WHITESPACE=1|
+
+%<"_shelx_hkl_file", 1, _shelx.hkl_chunks, _shelx.hkl_checksum, _bruker_final_report>section
+    %<__has_hkl_file, 1>variable
+    %|MAX_LENGTH=128|
+    %|STRIP_WHITESPACE=0|
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[1]>section
+    %<_shelx.hkl_file, ( _shelx.hkl_chunks >= 1 and _shelx.hkl_chunk[1] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[2]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 2 and _shelx.hkl_chunk[2] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[3]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 3 and _shelx.hkl_chunk[3] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[4]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 4 and _shelx.hkl_chunk[4] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[5]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 5 and _shelx.hkl_chunk[5] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[6]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 6 and _shelx.hkl_chunk[6] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[7]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 7 and _shelx.hkl_chunk[7] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[8]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 8 and _shelx.hkl_chunk[8] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[9]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 9 and _shelx.hkl_chunk[9] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[10]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 10 and _shelx.hkl_chunk[10] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[11]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 11 and _shelx.hkl_chunk[11] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[12]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 12 and _shelx.hkl_chunk[12] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[13]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 13 and _shelx.hkl_chunk[13] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[14]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 14 and _shelx.hkl_chunk[14] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[15]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 15 and _shelx.hkl_chunk[15] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[16]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 16 and _shelx.hkl_chunk[16] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[17]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 17 and _shelx.hkl_chunk[17] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[18]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 18 and _shelx.hkl_chunk[18] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[19]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 19 and _shelx.hkl_chunk[19] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[20]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 20 and _shelx.hkl_chunk[20] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[21]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 21 and _shelx.hkl_chunk[21] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[22]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 22 and _shelx.hkl_chunk[22] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[23]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 23 and _shelx.hkl_chunk[23] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[24]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 24 and _shelx.hkl_chunk[24] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[25]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 25 and _shelx.hkl_chunk[25] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[26]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 26 and _shelx.hkl_chunk[26] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[27]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 27 and _shelx.hkl_chunk[27] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[28]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 28 and _shelx.hkl_chunk[28] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[29]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 29 and _shelx.hkl_chunk[29] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[30]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 30 and _shelx.hkl_chunk[30] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[31]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 31 and _shelx.hkl_chunk[31] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[32]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 32 and _shelx.hkl_chunk[32] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[33]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 33 and _shelx.hkl_chunk[33] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[34]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 34 and _shelx.hkl_chunk[34] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[35]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 35 and _shelx.hkl_chunk[35] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[36]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 36 and _shelx.hkl_chunk[36] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[37]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 37 and _shelx.hkl_chunk[37] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[38]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 38 and _shelx.hkl_chunk[38] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[39]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 39 and _shelx.hkl_chunk[39] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[40]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 40 and _shelx.hkl_chunk[40] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[41]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 41 and _shelx.hkl_chunk[41] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[42]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 42 and _shelx.hkl_chunk[42] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[43]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 43 and _shelx.hkl_chunk[43] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[44]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 44 and _shelx.hkl_chunk[44] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[45]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 45 and _shelx.hkl_chunk[45] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[46]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 46 and _shelx.hkl_chunk[46] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[47]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 47 and _shelx.hkl_chunk[47] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[48]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 48 and _shelx.hkl_chunk[48] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[49]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 49 and _shelx.hkl_chunk[49] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[50]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 50 and _shelx.hkl_chunk[50] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[51]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 51 and _shelx.hkl_chunk[51] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[52]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 52 and _shelx.hkl_chunk[52] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[53]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 53 and _shelx.hkl_chunk[53] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[54]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 54 and _shelx.hkl_chunk[54] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[55]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 55 and _shelx.hkl_chunk[55] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[56]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 56 and _shelx.hkl_chunk[56] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[57]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 57 and _shelx.hkl_chunk[57] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[58]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 58 and _shelx.hkl_chunk[58] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[59]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 59 and _shelx.hkl_chunk[59] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[60]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 60 and _shelx.hkl_chunk[60] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[61]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 61 and _shelx.hkl_chunk[61] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[62]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 62 and _shelx.hkl_chunk[62] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[63]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 63 and _shelx.hkl_chunk[63] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[64]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 64 and _shelx.hkl_chunk[64] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[65]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 65 and _shelx.hkl_chunk[65] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[66]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 66 and _shelx.hkl_chunk[66] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[67]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 67 and _shelx.hkl_chunk[67] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[68]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 68 and _shelx.hkl_chunk[68] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[69]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 69 and _shelx.hkl_chunk[69] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[70]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 70 and _shelx.hkl_chunk[70] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[71]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 71 and _shelx.hkl_chunk[71] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[72]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 72 and _shelx.hkl_chunk[72] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[73]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 73 and _shelx.hkl_chunk[73] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[74]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 74 and _shelx.hkl_chunk[74] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[75]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 75 and _shelx.hkl_chunk[75] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[76]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 76 and _shelx.hkl_chunk[76] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[77]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 77 and _shelx.hkl_chunk[77] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[78]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 78 and _shelx.hkl_chunk[78] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[79]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 79 and _shelx.hkl_chunk[79] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[80]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 80 and _shelx.hkl_chunk[80] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[81]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 81 and _shelx.hkl_chunk[81] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[82]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 82 and _shelx.hkl_chunk[82] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[83]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 83 and _shelx.hkl_chunk[83] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[84]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 84 and _shelx.hkl_chunk[84] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[85]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 85 and _shelx.hkl_chunk[85] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[86]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 86 and _shelx.hkl_chunk[86] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[87]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 87 and _shelx.hkl_chunk[87] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[88]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 88 and _shelx.hkl_chunk[88] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[89]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 89 and _shelx.hkl_chunk[89] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[90]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 90 and _shelx.hkl_chunk[90] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[91]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 91 and _shelx.hkl_chunk[91] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[92]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 92 and _shelx.hkl_chunk[92] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[93]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 93 and _shelx.hkl_chunk[93] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[94]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 94 and _shelx.hkl_chunk[94] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[95]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 95 and _shelx.hkl_chunk[95] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[96]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 96 and _shelx.hkl_chunk[96] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[97]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 97 and _shelx.hkl_chunk[97] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[98]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 98 and _shelx.hkl_chunk[98] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[99]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 99 and _shelx.hkl_chunk[99] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file, _shelx.hkl_chunk[100]>section
+    %<_shelx.hkl_file, _shelx.hkl_file + "\n" + ( _shelx.hkl_chunks >= 100 and _shelx.hkl_chunk[100] or "" )>variable
+%<"_hkl_file", 1, __has_hkl_file>section
+%|IGNORE_WHITESPACE=0|
+_shelx_hkl_file                         %(_shelx.hkl_file)s
+_shelx_hkl_checksum                     %(_shelx.hkl_checksum=?)i
+%|IGNORE_WHITESPACE=1|
+%|STRIP_WHITESPACE=1|
+
+%<"_shelx_fab_file", 1, _shelx.fab_chunks, _shelx.fab_checksum, _bruker_final_report>section
+    %<__has_fab_file, 1>variable
+    %|STRIP_WHITESPACE=0|
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[1]>section
+    %<_shelx.fab_file, ( _shelx.fab_chunks >= 1 and _shelx.fab_chunk[1] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[2]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 2 and _shelx.fab_chunk[2] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[3]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 3 and _shelx.fab_chunk[3] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[4]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 4 and _shelx.fab_chunk[4] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[5]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 5 and _shelx.fab_chunk[5] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[6]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 6 and _shelx.fab_chunk[6] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[7]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 7 and _shelx.fab_chunk[7] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[8]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 8 and _shelx.fab_chunk[8] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[9]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 9 and _shelx.fab_chunk[9] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[10]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 10 and _shelx.fab_chunk[10] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[11]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 11 and _shelx.fab_chunk[11] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[12]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 12 and _shelx.fab_chunk[12] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[13]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 13 and _shelx.fab_chunk[13] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[14]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 14 and _shelx.fab_chunk[14] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[15]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 15 and _shelx.fab_chunk[15] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[16]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 16 and _shelx.fab_chunk[16] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[17]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 17 and _shelx.fab_chunk[17] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[18]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 18 and _shelx.fab_chunk[18] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[19]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 19 and _shelx.fab_chunk[19] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[20]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 20 and _shelx.fab_chunk[20] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[21]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 21 and _shelx.fab_chunk[21] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[22]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 22 and _shelx.fab_chunk[22] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[23]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 23 and _shelx.fab_chunk[23] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[24]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 24 and _shelx.fab_chunk[24] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[25]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 25 and _shelx.fab_chunk[25] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[26]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 26 and _shelx.fab_chunk[26] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[27]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 27 and _shelx.fab_chunk[27] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[28]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 28 and _shelx.fab_chunk[28] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[29]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 29 and _shelx.fab_chunk[29] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[30]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 30 and _shelx.fab_chunk[30] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[31]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 31 and _shelx.fab_chunk[31] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[32]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 32 and _shelx.fab_chunk[32] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[33]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 33 and _shelx.fab_chunk[33] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[34]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 34 and _shelx.fab_chunk[34] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[35]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 35 and _shelx.fab_chunk[35] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[36]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 36 and _shelx.fab_chunk[36] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[37]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 37 and _shelx.fab_chunk[37] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[38]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 38 and _shelx.fab_chunk[38] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[39]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 39 and _shelx.fab_chunk[39] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[40]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 40 and _shelx.fab_chunk[40] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[41]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 41 and _shelx.fab_chunk[41] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[42]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 42 and _shelx.fab_chunk[42] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[43]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 43 and _shelx.fab_chunk[43] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[44]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 44 and _shelx.fab_chunk[44] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[45]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 45 and _shelx.fab_chunk[45] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[46]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 46 and _shelx.fab_chunk[46] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[47]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 47 and _shelx.fab_chunk[47] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[48]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 48 and _shelx.fab_chunk[48] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[49]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 49 and _shelx.fab_chunk[49] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[50]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 50 and _shelx.fab_chunk[50] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[51]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 51 and _shelx.fab_chunk[51] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[52]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 52 and _shelx.fab_chunk[52] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[53]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 53 and _shelx.fab_chunk[53] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[54]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 54 and _shelx.fab_chunk[54] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[55]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 55 and _shelx.fab_chunk[55] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[56]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 56 and _shelx.fab_chunk[56] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[57]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 57 and _shelx.fab_chunk[57] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[58]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 58 and _shelx.fab_chunk[58] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[59]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 59 and _shelx.fab_chunk[59] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[60]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 60 and _shelx.fab_chunk[60] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[61]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 61 and _shelx.fab_chunk[61] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[62]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 62 and _shelx.fab_chunk[62] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[63]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 63 and _shelx.fab_chunk[63] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[64]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 64 and _shelx.fab_chunk[64] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[65]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 65 and _shelx.fab_chunk[65] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[66]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 66 and _shelx.fab_chunk[66] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[67]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 67 and _shelx.fab_chunk[67] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[68]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 68 and _shelx.fab_chunk[68] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[69]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 69 and _shelx.fab_chunk[69] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[70]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 70 and _shelx.fab_chunk[70] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[71]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 71 and _shelx.fab_chunk[71] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[72]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 72 and _shelx.fab_chunk[72] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[73]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 73 and _shelx.fab_chunk[73] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[74]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 74 and _shelx.fab_chunk[74] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[75]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 75 and _shelx.fab_chunk[75] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[76]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 76 and _shelx.fab_chunk[76] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[77]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 77 and _shelx.fab_chunk[77] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[78]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 78 and _shelx.fab_chunk[78] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[79]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 79 and _shelx.fab_chunk[79] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[80]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 80 and _shelx.fab_chunk[80] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[81]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 81 and _shelx.fab_chunk[81] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[82]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 82 and _shelx.fab_chunk[82] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[83]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 83 and _shelx.fab_chunk[83] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[84]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 84 and _shelx.fab_chunk[84] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[85]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 85 and _shelx.fab_chunk[85] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[86]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 86 and _shelx.fab_chunk[86] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[87]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 87 and _shelx.fab_chunk[87] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[88]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 88 and _shelx.fab_chunk[88] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[89]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 89 and _shelx.fab_chunk[89] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[90]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 90 and _shelx.fab_chunk[90] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[91]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 91 and _shelx.fab_chunk[91] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[92]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 92 and _shelx.fab_chunk[92] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[93]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 93 and _shelx.fab_chunk[93] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[94]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 94 and _shelx.fab_chunk[94] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[95]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 95 and _shelx.fab_chunk[95] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[96]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 96 and _shelx.fab_chunk[96] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[97]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 97 and _shelx.fab_chunk[97] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[98]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 98 and _shelx.fab_chunk[98] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[99]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 99 and _shelx.fab_chunk[99] or "" )>variable
+%<"_fab_file", 1, __has_fab_file, _shelx.fab_chunk[100]>section
+    %<_shelx.fab_file, _shelx.fab_file + "\n" + ( _shelx.fab_chunks >= 100 and _shelx.fab_chunk[100] or "" )>variable
+%<"_fab_file", 1, __has_fab_file>section
+%|IGNORE_WHITESPACE=0|
+_shelx_fab_file                         %(_shelx.fab_file)s
+_shelx_fab_checksum                     %(_shelx.fab_checksum=?)i
+%|IGNORE_WHITESPACE=1|
+%|STRIP_WHITESPACE=1|
+
+%<"_shelx_include_files", 1, _shelx.include_file_name, _shelx.include_file, _shelx.include_file_checksum>section
+    %<_shelx_include_file_name, _shelx.include_file_name>variable
+    %<_shelx_include_file, _shelx.include_file>variable
+    %<_shelx_include_file_checksum, _shelx.include_file_checksum>variable
+%|IGNORE_WHITESPACE=0|
+%|IGNORE_WHITESPACE=1|
+    %[%(_shelx_include_file_name)s,
+      %(_shelx_include_file)s,
+      %(_shelx_include_file_checksum)i]loop
+
