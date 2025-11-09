@@ -26,4 +26,4 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: powder-plot/target/release/plot.exe
+          files: powder-plot/target/release/Plot.exe

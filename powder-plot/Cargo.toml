@@ -16,5 +16,5 @@ rust_xlsxwriter = "0.91.0"
 winresource = "0.1.27"
 
 [[bin]]
-name = "plot"
+name = "Plot"
 path = "src/main.rs"
