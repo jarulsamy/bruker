@@ -1,6 +1,6 @@
 [package]
 name = "powder-plot"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 authors = ["Joshua Arulsamy <joshua.gf.arul@gmail.com>"]
 description = "Automate plotting x-ray powder diffraction data."
