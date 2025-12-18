@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*.*.*"
+  pull_request:
 
 jobs:
   build-windows:
@@ -23,7 +24,15 @@ jobs:
       - name: Build release
         run: cargo build --release --manifest-path powder-plot/Cargo.toml
 
-      - name: Release
+      - name: Upload binary for PRs
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: powder-plot-windows
+          path: powder-plot/target/release/Plot.exe
+
+      - name: Release on tag push
+        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           files: powder-plot/target/release/Plot.exe

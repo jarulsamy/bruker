@@ -122,6 +122,8 @@ impl PlotData {
             .set_major_gridlines(false)
             .set_minor_gridlines(false);
 
+        chart.legend().set_hidden();
+
         // Insert chart at D2
         worksheet.insert_chart(1, 3, &chart)?;
 
