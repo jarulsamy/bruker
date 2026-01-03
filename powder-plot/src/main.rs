@@ -46,6 +46,7 @@ struct DifferentialPlotData {
     header: Vec<String>,
     x_g: Vec<f64>,
     intensity: Vec<f64>,
+    multiplier: f64,
 }
 
 trait Plottable {
@@ -200,6 +201,7 @@ impl DifferentialPlotData {
             header: Vec::new(),
             x_g: Vec::new(),
             intensity: Vec::new(),
+            multiplier: 1.0,
         };
     }
 }
@@ -220,7 +222,6 @@ impl Plottable for DifferentialPlotData {
                 Some(line_res) => {
                     let line = line_res?;
                     if line.trim_start().starts_with("X [G]") {
-                        // Found the data header; stop collecting header lines and proceed to data
                         break;
                     } else {
                         header.push(line);
@@ -233,6 +234,33 @@ impl Plottable for DifferentialPlotData {
                 }
             }
         }
+
+        // If the user cancels, user_value remains None. If they enter invalid text, show an
+        // error and re-prompt until they cancel or provide a valid float.
+        let multiplier: f64 = loop {
+            match tinyfiledialogs::input_box(
+                "Enter multiplier",
+                "Enter a floating-point value (or click Cancel):",
+                "1.0",
+            ) {
+                Some(s) => {
+                    match s.trim().parse::<f64>() {
+                        Ok(v) => break v,
+                        Err(_) => {
+                            tinyfiledialogs::message_box_ok(
+                                "Invalid input",
+                                "Please enter a valid floating point number.",
+                                tinyfiledialogs::MessageBoxIcon::Error,
+                            );
+                            continue;
+                        }
+                    }
+                }
+                None => {
+                    panic!("User cancelled input dialog.");
+                },
+            }
+        };
 
         // Parse remaining lines as data pairs: x_g and intensity
         let mut x_g: Vec<f64> = Vec::new();
@@ -264,6 +292,7 @@ impl Plottable for DifferentialPlotData {
             header,
             x_g,
             intensity,
+            multiplier,
         })
     }
 
@@ -278,13 +307,35 @@ impl Plottable for DifferentialPlotData {
         let header_len = self.header.len() as u32;
         worksheet.write(header_len, 0, "X [G]")?;
         worksheet.write(header_len, 1, "Intensity")?;
+        worksheet.write(header_len, 2, "g-factor")?;
+        worksheet.write(header_len, 3, "Intensity")?;
 
         // Data start (zero-based row index)
         let data_start = header_len + 1;
         let data_end = data_start + (self.x_g.len() as u32) - 1;
 
+        // Excel rows are 1-based in formulas
+        let excel_data_start = data_start + 1;
+        let excel_data_end = data_end + 1;
+
         worksheet.write_column(data_start, 0, self.x_g.clone())?;
         worksheet.write_column(data_start, 1, self.intensity.clone())?;
+
+        // Write g-factor formula in column C for each row: (714.8 * multiplier) / A<row>
+        for (i, _) in self.x_g.iter().enumerate() {
+            let row_idx = data_start + i as u32; // 0-based for write methods
+            let excel_row_num = excel_data_start + i as u32; // 1-based for formula reference
+            let formula = format!("=(714.8 * {})/A{}", self.multiplier, excel_row_num);
+            worksheet.write_formula(row_idx, 2, &*formula)?;
+        }
+
+        // Write intensity formula in column D for each row: B<row> / 1000
+        for (i, _) in self.x_g.iter().enumerate() {
+            let row_idx = data_start + i as u32; // 0-based for write methods
+            let excel_row_num = excel_data_start + i as u32; // 1-based for formula reference
+            let formula = format!("=B{}/1000", excel_row_num);
+            worksheet.write_formula(row_idx, 3, &*formula)?;
+        }
 
         let mut chart = Chart::new(ChartType::ScatterSmooth);
         let chart_title = match base_name {
@@ -292,9 +343,6 @@ impl Plottable for DifferentialPlotData {
             Some(x) => x.to_string(),
         };
 
-        // Excel rows are 1-based in formulas
-        let excel_data_start = data_start + 1;
-        let excel_data_end = data_end + 1;
         let cat_range = format!("=Sheet1!$A${}:$A${}", excel_data_start, excel_data_end);
         let val_range = format!("=Sheet1!$B${}:$B${}", excel_data_start, excel_data_end);
         chart
@@ -330,7 +378,6 @@ impl Plottable for DifferentialPlotData {
             .cloned()
             .reduce(f64::max)
             .unwrap_or(0.0);
-        let x_range = x_g_max_raw - x_g_min_raw;
 
         // Simpler policy: force X major ticks to 20 with 10 minor ticks between.
         // Snap bounds to multiples of 20 so gridlines align cleanly. Use the next
@@ -414,8 +461,7 @@ impl Plottable for DifferentialPlotData {
 
         chart.legend().set_hidden();
 
-        // Insert chart at D2
-        worksheet.insert_chart(1, 3, &chart)?;
+        worksheet.insert_chart(3, 5, &chart)?;
 
         workbook.save(out_filepath)?;
 
@@ -516,7 +562,6 @@ fn main() -> Result<()> {
     };
 
     let data = read_input(&args.infile)?;
-    println!("{:?}", data);
     match data {
         Plot::Basic(d) => d.to_excel(&unique_out_filepath, title.as_deref())?,
         Plot::Differential(d) => d.to_excel(&unique_out_filepath, title.as_deref())?,
