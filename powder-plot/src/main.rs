@@ -337,7 +337,9 @@ impl Plottable for DifferentialPlotData {
             worksheet.write_formula(row_idx, 3, &*formula)?;
         }
 
-        let mut chart = Chart::new(ChartType::ScatterSmooth);
+        /* ------------------ First chart -------------------------- */
+
+        let mut chart_a = Chart::new(ChartType::ScatterSmooth);
         let chart_title = match base_name {
             None => Local::now().format("%Y-%m-%d_%H-%M-%S").to_string(),
             Some(x) => x.to_string(),
@@ -345,7 +347,7 @@ impl Plottable for DifferentialPlotData {
 
         let cat_range = format!("=Sheet1!$A${}:$A${}", excel_data_start, excel_data_end);
         let val_range = format!("=Sheet1!$B${}:$B${}", excel_data_start, excel_data_end);
-        chart
+        chart_a
             .add_series()
             .set_categories(&cat_range)
             .set_values(&val_range)
@@ -353,12 +355,12 @@ impl Plottable for DifferentialPlotData {
                 ChartFormat::new().set_line(ChartLine::new().set_color("#00008B").set_width(0.5)),
             );
 
-        chart
+        chart_a
             .title()
             .set_name(&chart_title)
             .set_font(ChartFont::new().set_size(14));
-        chart.set_height(HEIGHT);
-        chart.set_width(WIDTH);
+        chart_a.set_height(HEIGHT);
+        chart_a.set_width(WIDTH);
 
         let mut axis_font = ChartFont::new();
         axis_font.set_size(9);
@@ -428,7 +430,7 @@ impl Plottable for DifferentialPlotData {
         let intensity_min = -intensity_max;
 
         let x_crossing = ChartAxisCrossing::AxisValue(0.0);
-        chart
+        chart_a
             .x_axis()
             .set_name("Field (G)")
             .set_name_font(&axis_font)
@@ -445,7 +447,7 @@ impl Plottable for DifferentialPlotData {
             .set_crossing(x_crossing);
 
         let y_crossing = ChartAxisCrossing::AxisValue(intensity_min);
-        chart
+        chart_a
             .y_axis()
             .set_name("Intensity (a. u.)")
             .set_name_font(&axis_font)
@@ -459,9 +461,140 @@ impl Plottable for DifferentialPlotData {
             .set_minor_gridlines(false)
             .set_crossing(y_crossing);
 
-        chart.legend().set_hidden();
+        chart_a.legend().set_hidden();
 
-        worksheet.insert_chart(3, 5, &chart)?;
+        /* ------------------ Second chart -------------------------- */
+
+        // Compute the columns for g-factor and normalized intensity
+        // We don't write these values (excel calculates on the fly with the formulas)
+        // But we still need them for the ranges (axis) in the chart.
+
+        let g_factor = self.x_g.iter().map(|&x| (714.8 * self.multiplier) / x).collect::<Vec<f64>>();
+        let normalized_intensity = self.intensity.iter().map(|&x| x / 1000.0).collect::<Vec<f64>>();
+
+
+        let mut chart_b = Chart::new(ChartType::ScatterSmooth);
+        let chart_title = match base_name {
+            None => Local::now().format("%Y-%m-%d_%H-%M-%S").to_string(),
+            Some(x) => x.to_string(),
+        };
+
+        let cat_range = format!("=Sheet1!$C${}:$C${}", excel_data_start, excel_data_end);
+        let val_range = format!("=Sheet1!$D${}:$D${}", excel_data_start, excel_data_end);
+        chart_b
+            .add_series()
+            .set_categories(&cat_range)
+            .set_values(&val_range)
+            .set_format(
+                ChartFormat::new().set_line(ChartLine::new().set_color("#00008B").set_width(0.5)),
+            );
+
+        chart_b
+            .title()
+            .set_name(&chart_title)
+            .set_font(ChartFont::new().set_size(14));
+        chart_b.set_height(HEIGHT);
+        chart_b.set_width(WIDTH);
+
+        let mut axis_font = ChartFont::new();
+        axis_font.set_size(9);
+
+        let target_ticks = 8.0;
+
+        // X axis: snap min/max outward to multiples of a nice step
+        let g_factor_min_raw = g_factor
+            .iter()
+            .cloned()
+            .reduce(f64::min)
+            .unwrap_or(0.0);
+        let g_factor_max_raw = g_factor
+            .iter()
+            .cloned()
+            .reduce(f64::max)
+            .unwrap_or(0.0);
+
+        // Simpler policy: force X major ticks to 20 with 10 minor ticks between.
+        // Snap bounds to multiples of 20 so gridlines align cleanly. Use the next
+        // 20-step as the start (ceil) — it's acceptable to cut one left step for
+        // a tidier axis.
+        let x_step = 20.0_f64;
+        let mut g_factor_min = (g_factor_min_raw / x_step).ceil() * x_step; // start at next multiple (may cut leftmost step)
+        let mut g_factor_max = (g_factor_max_raw / x_step).ceil() * x_step;
+        if (g_factor_max - g_factor_min).abs() < std::f64::EPSILON {
+            g_factor_max = g_factor_min + x_step;
+            g_factor_min = g_factor_max - x_step; // ensure at least one step range
+        }
+        // Ensure data are included on the right; if snapping somehow excluded the data max, expand minimally
+        if g_factor_max < g_factor_max_raw {
+            g_factor_max = g_factor_min + x_step * (((g_factor_max_raw - g_factor_min) / x_step).ceil().max(1.0));
+        }
+
+        // Compute symmetric Y axis around zero so 0 is centered, while ensuring the
+        // full normalized_intensity range is visible. Add a small padding (5%). If the data
+        // are all zero, fall back to a default range of [-1, 1]. Then snap the
+        // Y limits to a 'nice' step so major gridlines divide cleanly.
+        let normalized_intensity_min_raw = normalized_intensity
+            .iter()
+            .cloned()
+            .reduce(f64::min)
+            .unwrap_or(0.0);
+        let normalized_intensity_max_raw = normalized_intensity
+            .iter()
+            .cloned()
+            .reduce(f64::max)
+            .unwrap_or(0.0);
+        let max_abs = normalized_intensity_min_raw.abs().max(normalized_intensity_max_raw.abs());
+        let y_limit = if max_abs == 0.0 {
+            1.0
+        } else {
+            // 5% padding
+            max_abs * 1.05
+        };
+
+        let raw_y_step = (2.0 * y_limit) / target_ticks;
+        let y_step = nice_step(raw_y_step);
+
+        // Snap y limits to integer multiples of step and keep symmetrical about 0
+        let steps_needed = (y_limit / y_step).ceil();
+        let normalized_intensity_max = steps_needed * y_step;
+        let normalized_intensity_min = -normalized_intensity_max;
+
+        let x_crossing = ChartAxisCrossing::AxisValue(0.0);
+        chart_b
+            .x_axis()
+            .set_name("Field (G)")
+            .set_name_font(&axis_font)
+            .set_format(ChartFormat::new().set_line(ChartLine::new().set_color("#000000")))
+            .set_min(g_factor_min)
+            .set_max(g_factor_max)
+            .set_major_unit(x_step)
+            .set_minor_unit(x_step / 5.0)
+            .set_major_tick_type(ChartAxisTickType::Inside)
+            .set_minor_tick_type(ChartAxisTickType::Inside)
+            .set_major_gridlines(false)
+            .set_minor_gridlines(false)
+            .set_minor_gridlines(false)
+            .set_crossing(x_crossing);
+
+        let y_crossing = ChartAxisCrossing::AxisValue(normalized_intensity_min);
+        chart_b
+            .y_axis()
+            .set_name("normalized_intensity (a. u.)")
+            .set_name_font(&axis_font)
+            .set_format(ChartFormat::new().set_line(ChartLine::new().set_color("#000000")))
+            .set_min(normalized_intensity_min)
+            .set_max(normalized_intensity_max)
+            .set_major_unit(y_step)
+            .set_major_tick_type(ChartAxisTickType::Inside)
+            .set_minor_tick_type(ChartAxisTickType::Inside)
+            .set_major_gridlines(false)
+            .set_minor_gridlines(false)
+            .set_crossing(y_crossing);
+
+        chart_b.legend().set_hidden();
+
+        worksheet.insert_chart(3, 5, &chart_a)?;
+        worksheet.insert_chart(3, 18, &chart_b)?;
 
         workbook.save(out_filepath)?;
 
