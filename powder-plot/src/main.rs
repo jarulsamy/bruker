@@ -7,7 +7,9 @@ use clap::Parser;
 use core::f64;
 use csv::ReaderBuilder;
 use rust_xlsxwriter::{
-    Chart, chart::{ChartAxisCrossing, ChartAxisTickType, ChartFont, ChartFormat, ChartLine, ChartType}, workbook::Workbook, worksheet
+    chart::{ChartAxisCrossing, ChartAxisTickType, ChartFont, ChartFormat, ChartLine, ChartType},
+    workbook::Workbook,
+    worksheet, Chart,
 };
 use std::{
     fs::File,
@@ -19,20 +21,27 @@ const DPI: u32 = 96;
 const HEIGHT: u32 = 6 * DPI;
 const WIDTH: u32 = 8 * DPI;
 
-// Choose a 'nice' step size (1,2,5,10,20 × 10^n)
+// Choose a 'nice' step size (0.1,0.2,0.5,1,2,5,10,20 × 10^n). Supports decimal steps
+// and considers smaller magnitudes for values < 1.
 fn nice_step(raw: f64) -> f64 {
     if raw <= 0.0 {
         return 1.0;
     }
-    let exp = raw.abs().log10().floor();
-    let base = 10f64.powf(exp);
-    for m in [1.0, 2.0, 5.0, 10.0, 20.0] {
-        let s = m * base;
-        if s >= raw {
-            return s;
+    // Work in integer exponents but consider a wider range so we can return
+    // reasonably small steps for tiny raw values.
+    let exp = raw.abs().log10().floor() as i32;
+    let multipliers = [0.01, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0];
+    for e in (exp - 2)..=(exp + 1) {
+        let base = 10f64.powi(e);
+        for &m in &multipliers {
+            let s = m * base;
+            if s >= raw {
+                return s;
+            }
         }
     }
-    20.0 * base
+    // Fallback
+    20.0 * 10f64.powi(exp)
 }
 
 #[derive(Debug)]
@@ -243,22 +252,20 @@ impl Plottable for DifferentialPlotData {
                 "Enter a floating-point value (or click Cancel):",
                 "1.0",
             ) {
-                Some(s) => {
-                    match s.trim().parse::<f64>() {
-                        Ok(v) => break v,
-                        Err(_) => {
-                            tinyfiledialogs::message_box_ok(
-                                "Invalid input",
-                                "Please enter a valid floating point number.",
-                                tinyfiledialogs::MessageBoxIcon::Error,
-                            );
-                            continue;
-                        }
+                Some(s) => match s.trim().parse::<f64>() {
+                    Ok(v) => break v,
+                    Err(_) => {
+                        tinyfiledialogs::message_box_ok(
+                            "Invalid input",
+                            "Please enter a valid floating point number.",
+                            tinyfiledialogs::MessageBoxIcon::Error,
+                        );
+                        continue;
                     }
-                }
+                },
                 None => {
                     panic!("User cancelled input dialog.");
-                },
+                }
             }
         };
 
@@ -368,18 +375,8 @@ impl Plottable for DifferentialPlotData {
         let target_ticks = 8.0;
 
         // X axis: snap min/max outward to multiples of a nice step
-        let x_g_min_raw = self
-            .x_g
-            .iter()
-            .cloned()
-            .reduce(f64::min)
-            .unwrap_or(0.0);
-        let x_g_max_raw = self
-            .x_g
-            .iter()
-            .cloned()
-            .reduce(f64::max)
-            .unwrap_or(0.0);
+        let x_g_min_raw = self.x_g.iter().cloned().reduce(f64::min).unwrap_or(0.0);
+        let x_g_max_raw = self.x_g.iter().cloned().reduce(f64::max).unwrap_or(0.0);
 
         // Simpler policy: force X major ticks to 20 with 10 minor ticks between.
         // Snap bounds to multiples of 20 so gridlines align cleanly. Use the next
@@ -469,9 +466,16 @@ impl Plottable for DifferentialPlotData {
         // We don't write these values (excel calculates on the fly with the formulas)
         // But we still need them for the ranges (axis) in the chart.
 
-        let g_factor = self.x_g.iter().map(|&x| (714.8 * self.multiplier) / x).collect::<Vec<f64>>();
-        let normalized_intensity = self.intensity.iter().map(|&x| x / 1000.0).collect::<Vec<f64>>();
-
+        let g_factor = self
+            .x_g
+            .iter()
+            .map(|&x| (714.8 * self.multiplier) / x)
+            .collect::<Vec<f64>>();
+        let normalized_intensity = self
+            .intensity
+            .iter()
+            .map(|&x| x / 1000.0)
+            .collect::<Vec<f64>>();
 
         let mut chart_b = Chart::new(ChartType::ScatterSmooth);
         let chart_title = match base_name {
@@ -502,22 +506,14 @@ impl Plottable for DifferentialPlotData {
         let target_ticks = 8.0;
 
         // X axis: snap min/max outward to multiples of a nice step
-        let g_factor_min_raw = g_factor
-            .iter()
-            .cloned()
-            .reduce(f64::min)
-            .unwrap_or(0.0);
-        let g_factor_max_raw = g_factor
-            .iter()
-            .cloned()
-            .reduce(f64::max)
-            .unwrap_or(0.0);
+        let g_factor_min_raw = g_factor.iter().cloned().reduce(f64::min).unwrap_or(0.0);
+        let g_factor_max_raw = g_factor.iter().cloned().reduce(f64::max).unwrap_or(0.0);
 
         // Simpler policy: force X major ticks to 20 with 10 minor ticks between.
         // Snap bounds to multiples of 20 so gridlines align cleanly. Use the next
         // 20-step as the start (ceil) — it's acceptable to cut one left step for
         // a tidier axis.
-        let x_step = 20.0_f64;
+        let x_step = 0.01_f64;
         let mut g_factor_min = (g_factor_min_raw / x_step).ceil() * x_step; // start at next multiple (may cut leftmost step)
         let mut g_factor_max = (g_factor_max_raw / x_step).ceil() * x_step;
         if (g_factor_max - g_factor_min).abs() < std::f64::EPSILON {
@@ -526,7 +522,8 @@ impl Plottable for DifferentialPlotData {
         }
         // Ensure data are included on the right; if snapping somehow excluded the data max, expand minimally
         if g_factor_max < g_factor_max_raw {
-            g_factor_max = g_factor_min + x_step * (((g_factor_max_raw - g_factor_min) / x_step).ceil().max(1.0));
+            g_factor_max = g_factor_min
+                + x_step * (((g_factor_max_raw - g_factor_min) / x_step).ceil().max(1.0));
         }
 
         // Compute symmetric Y axis around zero so 0 is centered, while ensuring the
@@ -543,7 +540,9 @@ impl Plottable for DifferentialPlotData {
             .cloned()
             .reduce(f64::max)
             .unwrap_or(0.0);
-        let max_abs = normalized_intensity_min_raw.abs().max(normalized_intensity_max_raw.abs());
+        let max_abs = normalized_intensity_min_raw
+            .abs()
+            .max(normalized_intensity_max_raw.abs());
         let y_limit = if max_abs == 0.0 {
             1.0
         } else {
@@ -562,7 +561,7 @@ impl Plottable for DifferentialPlotData {
         let x_crossing = ChartAxisCrossing::AxisValue(0.0);
         chart_b
             .x_axis()
-            .set_name("Field (G)")
+            .set_name("g value")
             .set_name_font(&axis_font)
             .set_format(ChartFormat::new().set_line(ChartLine::new().set_color("#000000")))
             .set_min(g_factor_min)
@@ -579,7 +578,7 @@ impl Plottable for DifferentialPlotData {
         let y_crossing = ChartAxisCrossing::AxisValue(normalized_intensity_min);
         chart_b
             .y_axis()
-            .set_name("normalized_intensity (a. u.)")
+            .set_name("Intensity (a. u.)")
             .set_name_font(&axis_font)
             .set_format(ChartFormat::new().set_line(ChartLine::new().set_color("#000000")))
             .set_min(normalized_intensity_min)
