@@ -313,25 +313,7 @@ impl Plottable for DifferentialPlotData {
         chart.set_width(WIDTH);
 
         let mut axis_font = ChartFont::new();
-        axis_font.set_size(9).unset_bold();
-
-        // Pick a 'nice' step size and snap both axes to multiples of that step so
-        // major ticks/gridlines divide cleanly. We include 20 as a possible step
-        // multiplier (1,2,5,10,20 × 10^n). Target ~4 major intervals.
-        fn nice_step(raw: f64) -> f64 {
-            if raw <= 0.0 {
-                return 1.0;
-            }
-            let exp = raw.abs().log10().floor();
-            let base = 10f64.powf(exp);
-            for m in [1.0, 2.0, 5.0, 10.0, 20.0] {
-                let s = m * base;
-                if s >= raw {
-                    return s;
-                }
-            }
-            20.0 * base
-        }
+        axis_font.set_size(9);
 
         let target_ticks = 8.0;
 
@@ -355,7 +337,6 @@ impl Plottable for DifferentialPlotData {
         // 20-step as the start (ceil) — it's acceptable to cut one left step for
         // a tidier axis.
         let x_step = 20.0_f64;
-        let x_minor = x_step / 10.0;
         let mut x_g_min = (x_g_min_raw / x_step).ceil() * x_step; // start at next multiple (may cut leftmost step)
         let mut x_g_max = (x_g_max_raw / x_step).ceil() * x_step;
         if (x_g_max - x_g_min).abs() < std::f64::EPSILON {
@@ -408,7 +389,7 @@ impl Plottable for DifferentialPlotData {
             .set_min(x_g_min)
             .set_max(x_g_max)
             .set_major_unit(x_step)
-            .set_minor_unit(x_step / 10.0)
+            .set_minor_unit(x_step / 5.0)
             .set_major_tick_type(ChartAxisTickType::Inside)
             .set_minor_tick_type(ChartAxisTickType::Inside)
             .set_major_gridlines(false)
