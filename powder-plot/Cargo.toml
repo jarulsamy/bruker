@@ -12,6 +12,7 @@ clap = { version = "4.5.51", features = ["derive"] }
 csv = "1.4.0"
 opener = "0.8.3"
 rust_xlsxwriter = "0.91.0"
+tinyfiledialogs = "3.3"
 
 [build-dependencies]
 winresource = "0.1.27"
