@@ -9,7 +9,7 @@ use csv::ReaderBuilder;
 use rust_xlsxwriter::{
     chart::{ChartAxisCrossing, ChartAxisTickType, ChartFont, ChartFormat, ChartLine, ChartType},
     workbook::Workbook,
-    worksheet, Chart,
+    Chart,
 };
 use std::{
     fs::File,
@@ -201,17 +201,6 @@ impl Plottable for BasicPlotData {
         workbook.save(out_filepath)?;
 
         Ok(())
-    }
-}
-
-impl DifferentialPlotData {
-    fn new() -> Self {
-        return DifferentialPlotData {
-            header: Vec::new(),
-            x_g: Vec::new(),
-            intensity: Vec::new(),
-            multiplier: 1.0,
-        };
     }
 }
 
