@@ -55,7 +55,7 @@ struct DifferentialPlotData {
     header: Vec<String>,
     x_g: Vec<f64>,
     intensity: Vec<f64>,
-    multiplier: f64,
+    frequency: f64,
 }
 
 trait Plottable {
@@ -235,9 +235,9 @@ impl Plottable for DifferentialPlotData {
 
         // If the user cancels, user_value remains None. If they enter invalid text, show an
         // error and re-prompt until they cancel or provide a valid float.
-        let multiplier: f64 = loop {
+        let frequency: f64 = loop {
             match tinyfiledialogs::input_box(
-                "Enter multiplier",
+                "Enter Frequency",
                 "Enter a floating-point value (or click Cancel):",
                 "1.0",
             ) {
@@ -284,11 +284,18 @@ impl Plottable for DifferentialPlotData {
             ));
         }
 
+        // let mut paired: Vec<_> = x_g.into_iter().zip(intensity.into_iter()).collect();
+        // paired.sort_by(|(a1, _), (a2, _)| a1.partial_cmp(a2).unwrap());
+
+        // let (x_g_sorted, intensity_sorted): (Vec<f64>, Vec<f64>) = paired.into_iter().unzip();
+
         Ok(DifferentialPlotData {
             header,
+            // x_g: x_g_sorted,
+            // intensity: intensity_sorted,
             x_g,
             intensity,
-            multiplier,
+            frequency,
         })
     }
 
@@ -317,11 +324,11 @@ impl Plottable for DifferentialPlotData {
         worksheet.write_column(data_start, 0, self.x_g.clone())?;
         worksheet.write_column(data_start, 1, self.intensity.clone())?;
 
-        // Write g-factor formula in column C for each row: (714.8 * multiplier) / A<row>
+        // Write g-factor formula in column C for each row: (714.8 * frequency) / A<row>
         for (i, _) in self.x_g.iter().enumerate() {
             let row_idx = data_start + i as u32; // 0-based for write methods
             let excel_row_num = excel_data_start + i as u32; // 1-based for formula reference
-            let formula = format!("=(714.8 * {})/A{}", self.multiplier, excel_row_num);
+            let formula = format!("=(714.8*{})/A{}", self.frequency, excel_row_num);
             worksheet.write_formula(row_idx, 2, &*formula)?;
         }
 
@@ -415,7 +422,7 @@ impl Plottable for DifferentialPlotData {
         let intensity_max = steps_needed * y_step;
         let intensity_min = -intensity_max;
 
-        let x_crossing = ChartAxisCrossing::AxisValue(0.0);
+        let x_crossing = ChartAxisCrossing::Min;
         chart_a
             .x_axis()
             .set_name("Field (G)")
@@ -432,7 +439,7 @@ impl Plottable for DifferentialPlotData {
             .set_minor_gridlines(false)
             .set_crossing(x_crossing);
 
-        let y_crossing = ChartAxisCrossing::AxisValue(intensity_min);
+        let y_crossing = ChartAxisCrossing::Min;
         chart_a
             .y_axis()
             .set_name("Intensity (a. u.)")
@@ -458,7 +465,7 @@ impl Plottable for DifferentialPlotData {
         let g_factor = self
             .x_g
             .iter()
-            .map(|&x| (714.8 * self.multiplier) / x)
+            .map(|&x| (714.8 * self.frequency) / x)
             .collect::<Vec<f64>>();
         let normalized_intensity = self
             .intensity
@@ -498,21 +505,16 @@ impl Plottable for DifferentialPlotData {
         let g_factor_min_raw = g_factor.iter().cloned().reduce(f64::min).unwrap_or(0.0);
         let g_factor_max_raw = g_factor.iter().cloned().reduce(f64::max).unwrap_or(0.0);
 
-        // Simpler policy: force X major ticks to 20 with 10 minor ticks between.
-        // Snap bounds to multiples of 20 so gridlines align cleanly. Use the next
-        // 20-step as the start (ceil) — it's acceptable to cut one left step for
-        // a tidier axis.
         let x_step = 0.01_f64;
-        let mut g_factor_min = (g_factor_min_raw / x_step).ceil() * x_step; // start at next multiple (may cut leftmost step)
-        let mut g_factor_max = (g_factor_max_raw / x_step).ceil() * x_step;
+
+        let g_factor_min = (g_factor_min_raw / x_step).floor() * x_step;
+        let mut g_factor_max = (g_factor_max_raw / x_step).floor() * x_step;
+
         if (g_factor_max - g_factor_min).abs() < std::f64::EPSILON {
             g_factor_max = g_factor_min + x_step;
-            g_factor_min = g_factor_max - x_step; // ensure at least one step range
         }
-        // Ensure data are included on the right; if snapping somehow excluded the data max, expand minimally
-        if g_factor_max < g_factor_max_raw {
-            g_factor_max = g_factor_min
-                + x_step * (((g_factor_max_raw - g_factor_min) / x_step).ceil().max(1.0));
+        if g_factor_max <= g_factor_min {
+            g_factor_max = g_factor_min + x_step;
         }
 
         // Compute symmetric Y axis around zero so 0 is centered, while ensuring the
@@ -547,7 +549,7 @@ impl Plottable for DifferentialPlotData {
         let normalized_intensity_max = steps_needed * y_step;
         let normalized_intensity_min = -normalized_intensity_max;
 
-        let x_crossing = ChartAxisCrossing::AxisValue(0.0);
+        let x_crossing = ChartAxisCrossing::Max;
         chart_b
             .x_axis()
             .set_name("g value")
@@ -562,9 +564,10 @@ impl Plottable for DifferentialPlotData {
             .set_major_gridlines(false)
             .set_minor_gridlines(false)
             .set_minor_gridlines(false)
-            .set_crossing(x_crossing);
+            .set_crossing(x_crossing)
+            .set_reverse();
 
-        let y_crossing = ChartAxisCrossing::AxisValue(normalized_intensity_min);
+        let y_crossing = ChartAxisCrossing::Min;
         chart_b
             .y_axis()
             .set_name("Intensity (a. u.)")
